@@ -5,7 +5,7 @@ from flask import Flask, render_template_string, request
 
 app = Flask(__name__)
 
-# --- SAFE RELATIVE PATH LOADING FOR AWS ---
+# --- SAFE RELATIVE PATH RESOLUTION FOR RENDER ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "Customer_churn.pkl")
 
@@ -15,9 +15,9 @@ if os.path.exists(MODEL_PATH):
     try:
         model = joblib.load(MODEL_PATH)
     except Exception as e:
-        print(f"Error loading model: {e}")
+        print(f"Error loading model file: {e}")
 
-# Feature Mappings
+# Feature Mappings matching AdaBoost model configuration
 GENDER_MAP = {"Female": 0, "Male": 1}
 SUB_MAP = {"Basic": 0, "Standard": 1, "Premium": 2}
 CONTRACT_MAP = {"Monthly": 0, "Quarterly": 1, "Annual": 2}
@@ -155,7 +155,7 @@ HTML_TEMPLATE = """
             border: 1px solid #22c55e;
         }
 
-        /* FLYING BUTTERFLIES ANIMATION */
+        /* CONTINUOUS FLYING BUTTERFLIES ANIMATION */
         .butterfly-container {
             position: fixed;
             top: 0; left: 0;
@@ -190,7 +190,7 @@ HTML_TEMPLATE = """
 </head>
 <body>
 
-    <!-- FLYING BUTTERFLIES -->
+    <!-- FLYING BUTTERFLIES OVERLAY -->
     <div class="butterfly-container">
         <svg class="butterfly bf1" viewBox="0 0 50 50">
             <path fill="#ffd166" d="M25,25 Q10,5 5,20 Q10,35 25,25 Q40,5 45,20 Q40,35 25,25 Z"/>
@@ -319,7 +319,7 @@ def index():
             error_message = "Model file 'Customer_churn.pkl' was not found or could not be loaded."
         else:
             try:
-                # Get inputs from form
+                # Extract inputs from form
                 age = float(request.form.get("age", 35))
                 gender = request.form.get("gender", "Female")
                 tenure = float(request.form.get("tenure", 24))
@@ -331,8 +331,7 @@ def index():
                 total_spend = float(request.form.get("total_spend", 500))
                 last_interaction = float(request.form.get("last_interaction", 10))
 
-                # Structure DataFrame matching AdaBoost model feature order:
-                # ['Age', 'Gender', 'Tenure', 'Usage Frequency', 'Support Calls', 'Payment Delay', 'Subscription Type', 'Contract Length', 'Total Spend', 'Last Interaction']
+                # Feature array order matches Customer_churn.pkl model requirements
                 input_data = pd.DataFrame([{
                     'Age': age,
                     'Gender': GENDER_MAP.get(gender, 0),
@@ -366,5 +365,6 @@ def index():
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8501))
+    # Render binds the application port dynamically via os.environ.get("PORT")
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
